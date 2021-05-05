@@ -13,7 +13,7 @@ setup(
 
     packages=['objectDetectionSSD'],
     package_data={'objectDetectionSSD': ['labels.json']},
-    install_requires=['tensorflow==1.15.2','opencv-python'] ,
+    install_requires=['tensorflow==1.15.2'] ,
 
     zip_safe=False
     )
