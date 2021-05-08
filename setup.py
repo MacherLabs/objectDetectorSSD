@@ -1,7 +1,7 @@
 from setuptools import setup
 import os
 dirpath = os.path.dirname(__file__)
-command='cd {}/{}; ./install.sh'.format(dirpath,'installData')
+command='cd {}/{}/{}; ./install.sh'.format(dirpath,'objectDetectionSSD','installData')
 try:
     print("coomand",command)
     os.system(command)
