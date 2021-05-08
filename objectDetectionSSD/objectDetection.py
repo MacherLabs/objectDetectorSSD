@@ -7,7 +7,7 @@ logger.info("Loaded " + __name__)
 import os
 import tensorflow as tf
 import tensorflow.contrib.tensorrt as trt
-import tensorRTEngine as ten
+from . import tensorRTEngine as ten
 #import pandas as pd
 import numpy as np
 import json
