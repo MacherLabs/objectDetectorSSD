@@ -7,13 +7,16 @@ import uff
 import tensorrt as trt
 import graphsurgeon as gs
 import pycuda.driver as cuda
+import pycuda.autoinit 
+import cv2
 
 WORK_DIR = "/LFS/mobilenetssd"
 MODEL_DIR = 'models'
-INPUT_DIMS = (3, 300, 300)
+
 DEBUG_UFF = False
 DIR_NAME = os.path.dirname(__file__)
 LIB_FILE = os.path.abspath(os.path.join(DIR_NAME, 'installData/libflattenconcat.so'))
+print ("********************",LIB_FILE)
 if trt.__version__[0] < '7':
     ctypes.CDLL(LIB_FILE)
 TRT_LOGGER = trt.Logger(trt.Logger.INFO)
@@ -27,6 +30,7 @@ def _preprocess_trt(img, shape=(300, 300)):
     img *= (2.0/255.0)
     img -= 1.0
     return img
+
 
 
 def _postprocess_trt(img, output, conf_th, output_layout=7):
@@ -50,9 +54,10 @@ def _postprocess_trt(img, output, conf_th, output_layout=7):
 
 
 class trtSSDEngine():
-    def __init__(model_name,platform,input_shape=(300,300),cuda_ctx=None):
+    def __init__(self,model_name='frozen_inference_graph',input_shape=(300,300),cuda_ctx=None):
         
         self.inputDims=(3,input_shape[0],input_shape[1])
+        self.input_shape=input_shape
         model_loc = os.path.join(WORK_DIR, MODEL_DIR, model_name+'.pb')
         uff_loc=os.path.join(WORK_DIR, MODEL_DIR, model_name+'.uff')
         bin_loc=os.path.join(WORK_DIR, MODEL_DIR, model_name+'.bin')
@@ -65,13 +70,13 @@ class trtSSDEngine():
                 'max_size': 0.95,
                 'input_order': [0, 2, 1],  # order of loc_data, conf_data, priorbox_data
             }
-        self.convert()
+        if not os.path.isfile(bin_loc):
+            self.convert()
         self.cuda_ctx = cuda_ctx
         if self.cuda_ctx:
             self.cuda_ctx.push()
 
         self.trt_logger = trt.Logger(trt.Logger.INFO)
-        self._load_plugins()
         self.engine = self._load_engine()
         self.set_context()
         
@@ -217,8 +222,8 @@ class trtSSDEngine():
         graph.remove(graph.find_nodes_by_path(['Preprocessor/map/TensorArrayStack_1/TensorArrayGatherV3']), remove_exclusive_dependencies=False)  # for 'ssd_inception_v2_coco'
 
         graph.collapse_namespaces(namespace_plugin_map)
-        graph = replace_addv2(graph)
-        graph = replace_fusedbnv3(graph)
+        graph = self.replace_addv2(graph)
+        graph = self.replace_fusedbnv3(graph)
 
         if 'image_tensor:0' in graph.find_nodes_by_name('Input')[0].input:
             graph.find_nodes_by_name('Input')[0].input.remove('image_tensor:0')
@@ -239,14 +244,14 @@ class trtSSDEngine():
         return graph
                
     def convert(self):
-        dynamic_graph = add_plugin(
+        dynamic_graph = self.add_plugin(
             gs.DynamicGraph(self.spec['input_pb']),
             self.spec)
         
         _ = uff.from_tensorflow(
             dynamic_graph.as_graph_def(),
             output_nodes=['NMS'],
-            output_filename=spec['tmp_uff'],
+            output_filename=self.spec['tmp_uff'],
             text=True,
             debug_mode=DEBUG_UFF)
         
@@ -265,7 +270,7 @@ class trtSSDEngine():
                 f.write(buf)
 
     def _load_engine(self):
-        TRTbin = self.specs['output_bin']
+        TRTbin = self.spec['output_bin']
         with open(TRTbin, 'rb') as f, trt.Runtime(self.trt_logger) as runtime:
             return runtime.deserialize_cuda_engine(f.read())
 

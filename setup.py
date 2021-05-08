@@ -1,8 +1,9 @@
 from setuptools import setup
 import os
 dirpath = os.path.dirname(__file__)
-command='cd {}/{}; ./install.sh'.format(dirpath,installData)
+command='cd {}/{}; ./install.sh'.format(dirpath,'installData')
 try:
+    print("coomand",command)
     os.system(command)
 except Exception as e:
     print("failed to install pre-req for tensorrt",str(e))
