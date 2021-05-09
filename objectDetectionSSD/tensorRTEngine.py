@@ -7,7 +7,7 @@ import uff
 import tensorrt as trt
 import graphsurgeon as gs
 import pycuda.driver as cuda
-import pycuda.autoinit 
+
 import cv2
 
 WORK_DIR = "/LFS/mobilenetssd"
@@ -56,6 +56,8 @@ def _postprocess_trt(img, output, conf_th, output_layout=7):
 class trtSSDEngine():
     def __init__(self,model_name='frozen_inference_graph',input_shape=(300,300),cuda_ctx=None):
         
+        trt.init_libnvinfer_plugins(TRT_LOGGER, '')
+        import pycuda.autoinit 
         self.inputDims=(3,input_shape[0],input_shape[1])
         self.input_shape=input_shape
         model_loc = os.path.join(WORK_DIR, MODEL_DIR, model_name+'.pb')

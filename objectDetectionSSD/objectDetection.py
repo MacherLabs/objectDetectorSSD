@@ -15,8 +15,8 @@ import cv2
 
 WORK_DIR = "/LFS/mobilenetssd"
 MODEL_DIR = 'models'
-MODEL_URLS=['http://api.staging.vedalabs.in/filemanager/7VLnJ/mobilenet_512_frozen_inference_graph_face.pb',
-            'http://api.staging.vedalabs.in/filemanager/hSpFV/mobilenet_300_frozen_inference_graph.pb']
+MODEL_URLS={'mobilenet_512_frozen_inference_graph_face.pb':'http://api.staging.vedalabs.in/filemanager/deZhV/mobilenet_512_frozen_inference_graph_face.pb',
+            'mobilenet_300_frozen_inference_graph.pb':'http://api.staging.vedalabs.in/filemanager/hSpFV/mobilenet_300_frozen_inference_graph.pb'}
 
 
 
@@ -41,16 +41,17 @@ class ObjectDetectorSSD():
         if not os.path.isfile(model_loc):
             try:
                 os.makedirs(os.path.join(WORK_DIR, MODEL_DIR))
+                self.download_model(model_name)
             except:
                 pass
-            self.download_model(model_name)
+            
 
         if tensorrt_enable==True:
             self.detector=ten.trtSSDEngine(model_name=model_name[:-3],input_shape=(input_size,input_size))
 
         else:  
         
-            if trt_enable ==True:
+            if tf_trt_enable ==True:
                 trt_model_name="{}_{}_{}".format("trt",precision,model_name)
                 trt_loc=os.path.join(WORK_DIR, MODEL_DIR, trt_model_name)
                 
@@ -67,7 +68,7 @@ class ObjectDetectorSSD():
                     serialized_graph = fid.read()
                     od_graph_def.ParseFromString(serialized_graph)
                     # Convert to tensorrt graph if asked
-                    if trt_enable == True and model_loc != trt_loc:
+                    if tf_trt_enable == True and model_loc != trt_loc:
                         logger.info("converting to trt-graph,please wait..")
                         trt_graph_def=trt.create_inference_graph(input_graph_def= od_graph_def,
                                                     max_batch_size=1,
@@ -187,10 +188,10 @@ class ObjectDetectorSSD():
         return out_list
     
     def download_model(self,model):
-        if '512' in model:
-            url = MODEL_URLS[0]
-        else:
-            url = MODEL_URLS[1]
+        try:
+            url=MODEL_URLS[model]
+        except:
+            return 
         download_location = os.path.join(WORK_DIR, MODEL_DIR)
         cmd = 'cd {};wget {}'.format(download_location,url)
         os.system(cmd)
