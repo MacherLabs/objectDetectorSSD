@@ -1,5 +1,13 @@
 from setuptools import setup
-
+import os
+dirpath = os.path.dirname(__file__)
+command='cd {}/{}/{}; ./install.sh'.format(dirpath,'objectDetectionSSD','installData')
+try:
+    print("coomand",command)
+    os.system(command)
+except Exception as e:
+    print("failed to install pre-req for tensorrt",str(e))
+    
 setup( 
     name='objectDetectionSSD',
     
@@ -12,8 +20,8 @@ setup(
     author_email='tech@gmail.com',
 
     packages=['objectDetectionSSD'],
-    package_data={'objectDetectionSSD': ['labels.json']},
-    install_requires=['tensorflow==1.15.2','opencv-python'] ,
+    package_data={'objectDetectionSSD': ['labels.json','installData']},
+    install_requires=['tensorflow'] ,
 
     zip_safe=False
     )
