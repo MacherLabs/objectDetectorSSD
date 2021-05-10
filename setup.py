@@ -22,6 +22,5 @@ setup(
     packages=['objectDetectionSSD'],
     package_data={'objectDetectionSSD': ['labels.json','installData']},
     install_requires=['tensorflow'] ,
-
     zip_safe=False
     )
