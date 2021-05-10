@@ -7,7 +7,10 @@ logger.info("Loaded " + __name__)
 import os
 import tensorflow as tf
 import tensorflow.contrib.tensorrt as trt
-from . import tensorRTEngine as ten
+try:
+    from . import tensorRTEngine as ten
+except Exception as e:
+    logger.info("Warning-tensorrt dependency not met-{}".format(str(e)))
 #import pandas as pd
 import numpy as np
 import json
